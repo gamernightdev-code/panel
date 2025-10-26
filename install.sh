@@ -1,60 +1,34 @@
 #!/bin/bash
 
-# ==========================================
-# Windows 10 Docker Control Script by Deepak
-# ==========================================
+# This script sets up Docker, creates a Windows 11 container using dockurr/windows
 
-DIR="dockercomp"
-YAML_FILE="windows10.yml"
+# Update and install Docker & Docker Compose
+echo "Updating system and installing Docker..."
+sudo apt update -y
+sudo apt install -y docker.io docker-compose
 
-menu() {
-  echo "============================"
-  echo "  WINDOWS 10 DOCKER MANAGER "
-  echo "============================"
-  echo "1) Install & Start Windows 10"
-  echo "2) Restart Windows Container"
-  echo "3) Stop Windows Container"
-  echo "4) Reboot VPS"
-  echo "============================"
-  read -p "Choose an option [1-4]: " choice
-  case $choice in
-    1) install_and_start ;;
-    2) restart_container ;;
-    3) stop_container ;;
-    4) reboot_vps ;;
-    *) echo "Invalid choice, exiting..." ;;
-  esac
-}
+# Create project directory
+PROJECT_DIR="$HOME/dockercom"
+mkdir -p "$PROJECT_DIR"
+cd "$PROJECT_DIR" || exit
 
-install_and_start() {
-  echo "[1/5] Updating system packages..."
-  sudo apt update -y
+# Create docker-compose file
+echo "Creating windows11.yml..."
+cat <<EOL > windows11.yml
+version: '3.8'
 
-  echo "[2/5] Installing Docker & Docker Compose..."
-  sudo apt install -y docker.io docker-compose
-
-  echo "[3/5] Enabling Docker service..."
-  sudo systemctl enable docker
-  sudo systemctl start docker
-
-  echo "[4/5] Preparing directory..."
-  mkdir -p "$DIR"
-  cd "$DIR" || exit
-
-  echo "[5/5] Creating docker-compose file..."
-  cat > $YAML_FILE <<EOL
 services:
   windows:
     image: dockurr/windows
     container_name: windows
     environment:
-      VERSION: "10"
-      USERNAME: "MASTER"
+      VERSION: "11"
+      USERNAME: "SOURAV SEC"
       PASSWORD: "admin@123"
-      RAM_SIZE: "4G"
+      RAM_SIZE: "2G"
       CPU_CORES: "4"
-      DISK_SIZE: "100G"
-      DISK2_SIZE: "50G"
+      DISK_SIZE: "400G"
+      DISK2_SIZE: "100G"
     devices:
       - /dev/kvm
       - /dev/net/tun
@@ -67,28 +41,8 @@ services:
     stop_grace_period: 2m
 EOL
 
-  echo "Launching Windows 10 container..."
-  sudo docker-compose -f $YAML_FILE up -d
-  echo "✅ Windows 10 container started successfully!"
-}
+# Run docker-compose
+echo "Starting Windows 11 container..."
+sudo docker-compose -f windows11.yml up -d
 
-restart_container() {
-  echo "Restarting Windows 10 container..."
-  cd "$DIR" || exit
-  sudo docker-compose -f $YAML_FILE restart
-  echo "✅ Windows 10 container restarted!"
-}
-
-stop_container() {
-  echo "Stopping Windows 10 container..."
-  cd "$DIR" || exit
-  sudo docker-compose -f $YAML_FILE down
-  echo "🛑 Windows 10 container stopped!"
-}
-
-reboot_vps() {
-  echo "♻️ Rebooting VPS..."
-  sudo reboot
-}
-
-menu
+echo "Setup complete! Access your container via RDP on port 3389 or web UI on port 8006."
